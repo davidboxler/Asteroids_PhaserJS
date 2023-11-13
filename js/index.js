@@ -1,5 +1,7 @@
+import GameOver from './scenes/GameOver.js';
 import Level1 from './scenes/Level1.js';
-import Preload from './scenes/Preloaded.js';
+import Preload from './scenes/Preload.js';
+import Winner from './scenes/Winner.js';
 
 // Create a new Phaser config object
 const config = {
@@ -21,14 +23,14 @@ const config = {
   physics: {
     default: "arcade",
     arcade: {
-      gravity: { y: 200 },
+    //   gravity: { y: 200 },
       debug: false,
     },
   },
   // List of scenes to load
   // Only the first scene will be shown
   // Remember to import the scene before adding it to the list
-  scene: [Preload, Level1],
+  scene: [Preload, Level1, Winner, GameOver],
 };
 
 // Create a new Phaser game instance
