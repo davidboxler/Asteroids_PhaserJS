@@ -4,19 +4,25 @@ export default class Level1 extends Phaser.Scene {
   }
 
   create() {
-    this.background = this.add
-      .image(0, 0, "fondoGalaxia")
-      .setOrigin(0, 0.5)
-      .setScale(1.5);
+    // Configura el fondo con el ancho y alto predeterminados
+    this.background = this.add.image(0, 0, "fondo").setOrigin(0, 0);
+
     this.background.setInteractive();
 
-    this.enemyShields = 5;
     this.playerShields = 100;
-    this.playerWon=true;
-    this.player = this.physics.add.sprite(100, 450, "ship");
+    this.playerWon = true;
+
+    // Asegúrate de que la nave del jugador aparezca en el centro de la pantalla
+    this.player = this.physics.add
+      .sprite(this.cameras.main.centerX, this.cameras.main.centerY, "ship")
+      .setScale(0.8);
     this.player.body.collideWorldBounds = true;
-    this.background.on("pointerup", this.handleBackgroundClick, this);
-    this.background.on("pointerdown", this.onDown, this);
+
+    // Agrega el evento de clic del mouse para mover la nave
+    this.background.on("pointerdown", this.handleBackgroundClickMove, this);
+
+    // Agrega el evento de la barra espaciadora para disparar
+    this.input.keyboard.on("keydown-SPACE", this.handleSpacebar, this);
 
     this.cameras.main.setBounds(
       0,
@@ -24,9 +30,11 @@ export default class Level1 extends Phaser.Scene {
       this.background.displayWidth,
       this.background.displayHeight
     );
-    this.cameras.main.startFollow(this.player, true);
+
+    // Ajusta la cámara para que comience centrada en la posición inicial de la nave del jugador
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+
     this.bulletGroup = this.physics.add.group();
-    this.ebulletGroup = this.physics.add.group();
     this.rockGroup = this.physics.add.group();
     this.makeRocks();
 
@@ -40,12 +48,16 @@ export default class Level1 extends Phaser.Scene {
       frameRate: 48,
       repeat: false,
     });
-
-    this.enemy = this.physics.add.sprite(500, 200, "eship");
-    this.enemy.body.collideWorldBounds = true;
+    this.shootTimer = this.time.addEvent({
+      delay: 300,
+      callback: this.allowShooting,
+      callbackScope: this,
+      loop: true,
+    });
     this.makeInfo();
     this.setColliders();
   }
+
   makeRocks() {
     if (this.rockGroup.getChildren().length == 0) {
       this.rockGroup = this.physics.add.group({
@@ -64,6 +76,11 @@ export default class Level1 extends Phaser.Scene {
           var yy = Math.floor(Math.random() * this.background.displayHeight);
           child.x = xx;
           child.y = yy;
+
+          // Cambia el tamaño de las rocas
+          var scaleFactor = Math.random() * (1 - 0.5) + 0.5; // Tamaño aleatorio entre 0.5 y 1.5
+          child.setScale(scaleFactor);
+
           var vx = Math.floor(Math.random() * 2) - 1;
           var vy = Math.floor(Math.random() * 2) - 1;
           if (vx == 0 && vy == 0) {
@@ -74,8 +91,10 @@ export default class Level1 extends Phaser.Scene {
           child.body.setVelocity(vx * speed, vy * speed);
         }.bind(this)
       );
+      this.setColliders();
     }
   }
+
   setColliders() {
     this.physics.add.collider(this.rockGroup);
     this.physics.add.collider(
@@ -86,71 +105,33 @@ export default class Level1 extends Phaser.Scene {
       this
     );
     this.physics.add.collider(
-      this.ebulletGroup,
-      this.rockGroup,
-      this.destoryRock,
-      null,
-      this
-    );
-    this.physics.add.collider(
-      this.bulletGroup,
-      this.enemy,
-      this.damageEnemy,
-      null,
-      this
-    );
-    this.physics.add.collider(
-      this.ebulletGroup,
-      this.player,
-      this.damagePlayer,
-      null,
-      this
-    );
-    this.physics.add.collider(
       this.rockGroup,
       this.player,
       this.rockHitPlayer,
       null,
       this
     );
-    this.physics.add.collider(
-      this.rockGroup,
-      this.enemy,
-      this.rockHitEnemy,
-      null,
-      this
-    );
   }
+
   makeInfo() {
     this.text1 = this.add.text(0, 0, "Shields\n100", {
       fontSize: game.config.width / 30,
       align: "center",
       backgroundColor: "#000000",
     });
-    this.text2 = this.add.text(0, 0, "Enemy Shields\n100", {
-      fontSize: game.config.width / 30,
-      align: "center",
-      backgroundColor: "#000000",
-    });
+
     this.text1.setOrigin(20, 20);
-    this.text2.setOrigin(-3.1, -0.5);
   }
+
   downPlayer() {
     this.playerShields--;
     this.text1.setText("Shields\n" + this.playerShields);
-    if(this.playerShields == 0) {
-        this.playerWon=false;
-        this.scene.start("GameOver");
+    if (this.playerShields == 0) {
+      this.playerWon = false;
+      this.scene.start("GameOver");
     }
   }
-  downEnemy() {
-    this.enemyShields--;
-    this.text2.setText("Enemy Shields\n" + this.enemyShields);
-    if(this.enemyShields == 0) {
-        this.playerWon=true;
-        this.scene.start("GameOver");
-    }
-  }
+
   rockHitPlayer(ship, rock) {
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
@@ -158,27 +139,14 @@ export default class Level1 extends Phaser.Scene {
     this.makeRocks();
     this.downPlayer();
   }
-  rockHitEnemy(ship, rock) {
-    var explosion = this.add.sprite(rock.x, rock.y, "exp");
-    explosion.play("boom");
-    rock.destroy();
-    this.makeRocks();
-    this.downEnemy();
-  }
+
   damagePlayer(player, bullet) {
     var explosion = this.add.sprite(this.player.x, this.player.y, "exp");
     explosion.play("boom");
     bullet.destroy();
     this.downPlayer();
   }
-  damageEnemy(player, bullet) {
-    var explosion = this.add.sprite(bullet.x, bullet.y, "exp");
-    explosion.play("boom");
-    bullet.destroy();
-    this.downEnemy();
 
-    this.handleMoveEnemy();
-  }
   destoryRock(bullet, rock) {
     bullet.destroy();
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
@@ -186,47 +154,53 @@ export default class Level1 extends Phaser.Scene {
     rock.destroy();
     this.makeRocks();
   }
+
   getTimer() {
     var d = new Date();
     return d.getTime();
   }
-  onDown() {
-    this.downTimer = this.getTimer(); // Corregir el nombre de la variable
-  }
-  handleBackgroundClick(pointer) {
-    const elapsed = Math.abs(this.downTimer - this.getTimer());
-    console.log(elapsed);
 
-    if (elapsed < 300) {
-      this.handleMovePlayer(pointer.x, pointer.y);
-      this.handleMoveEnemy();
-    } else {
+  onDown() {
+    this.downTimer = this.getTimer();
+  }
+
+  allowShooting() {
+    this.canShoot = true;
+  }
+
+  handleBackgroundClickMove(pointer) {
+    this.handleMovePlayer(pointer.x, pointer.y);
+  }
+
+  // Agrega este método para manejar la barra espaciadora
+  handleSpacebar(event) {
+    event.preventDefault(); // Evita el comportamiento predeterminado de la barra espaciadora (como hacer scroll)
+    // Verificar si el temporizador permite el disparo
+    const currentTime = this.getTimer();
+    const delay = 500; // Establecer el tiempo de retraso deseado en milisegundos
+
+    if (
+      this.canShoot &&
+      (!this.lastShotTime || currentTime - this.lastShotTime >= delay)
+    ) {
       this.makeBullet();
+      this.canShoot = false; // Desactivar el disparo hasta que pase el retraso
+      this.lastShotTime = currentTime; // Actualizar el tiempo del último disparo
+
+      // Configurar un retraso antes de permitir el próximo disparo
+      this.time.delayedCall(delay, () => {
+        this.canShoot = true;
+      });
     }
   }
+
   handleMovePlayer(targetX, targetY) {
     this.physics.moveTo(this.player, targetX, targetY, 100);
     this.rotateSpriteTowards(this.player, targetX, targetY);
     this.tx = targetX;
     this.ty = targetY;
-
-    // NAVE ENEMIGA
-    const distX2 = Math.abs(this.player.x - targetX);
-    const distY2 = Math.abs(this.player.y - targetY);
-
-    if (distX2 > 30 && distY2 > 30) {
-      this.handleMoveEnemy();
-    }
   }
-  handleMoveEnemy() {
-    const angle = this.physics.moveTo(
-      this.enemy,
-      this.player.x,
-      this.player.y,
-      60
-    );
-    this.enemy.angle = Phaser.Math.RadToDeg(angle);
-  }
+
   rotateSpriteTowards(sprite, targetX, targetY) {
     const angle = Phaser.Math.Angle.Between(
       sprite.x,
@@ -236,6 +210,7 @@ export default class Level1 extends Phaser.Scene {
     );
     sprite.angle = Phaser.Math.RadToDeg(angle);
   }
+
   makeBullet() {
     var dirObj = this.getDirFromAngle(this.player.angle);
     console.log(dirObj);
@@ -248,21 +223,7 @@ export default class Level1 extends Phaser.Scene {
     bullet.angle = this.player.angle;
     bullet.body.setVelocity(dirObj.tx * 200, dirObj.ty * 200);
   }
-  fireEBullet() {
-    var elapsed = Math.abs(this.lastEBullet - this.getTimer());
-    if (elapsed < 500) {
-      return;
-    }
-    this.lastEBullet = this.getTimer();
-    var ebullet = this.physics.add.sprite(
-      this.enemy.x,
-      this.enemy.y,
-      "ebullet"
-    );
-    this.ebulletGroup.add(ebullet);
-    ebullet.body.angularVelocity = 10;
-    this.physics.moveTo(ebullet, this.player.x, this.player.y, 200);
-  }
+
   getDirFromAngle(angle) {
     var rads = (angle * Math.PI) / 180;
     var tx = Math.cos(rads);
@@ -272,21 +233,34 @@ export default class Level1 extends Phaser.Scene {
       ty,
     };
   }
+
   update() {
-    //constant running loop
-    if (this.player && this.enemy) {
-      var distX = Math.abs(this.player.x - this.tx);
-      var distY = Math.abs(this.player.y - this.ty);
-      if (distX < 10 && distY < 10) {
-        if (this.player.body) {
-          this.player.body.setVelocity(0, 0);
-        }
+    this.checkRockPositions();
+    // Asegurar que las balas no se salgan del mundo
+    this.bulletGroup.children.iterate((bullet) => {
+      if (
+        bullet &&
+        (bullet.y < 0 || bullet.y > this.background.displayHeight)
+      ) {
+        bullet.destroy();
       }
-      var distX2 = Math.abs(this.player.x - this.enemy.x);
-      var distY2 = Math.abs(this.player.y - this.enemy.y);
-      if (distX2 < game.config.width / 5 && distY2 < game.config.height / 5) {
-        this.fireEBullet();
+    });
+  }
+
+  checkRockPositions() {
+    this.rockGroup.children.iterate((rock) => {
+      // Verificar si una roca ha salido por los bordes y ajustar su posición
+      if (rock.x < 0) {
+        rock.x = this.background.displayWidth;
+      } else if (rock.x > this.background.displayWidth) {
+        rock.x = 0;
       }
-    }
+
+      if (rock.y < 0) {
+        rock.y = this.background.displayHeight;
+      } else if (rock.y > this.background.displayHeight) {
+        rock.y = 0;
+      }
+    });
   }
 }

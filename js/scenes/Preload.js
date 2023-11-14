@@ -10,6 +10,7 @@ export default class Preload extends Phaser.Scene {
     // load assets
     this.load.image("ship", "../../images/player.png");
     this.load.image("fondoGalaxia", "../../images/background.jpg");
+    this.load.image("fondo", "../../images/fondo2.jpg");
     this.load.spritesheet("rocks", "../../images/rocks.png", {
       frameWidth: 125,
       frameHeight: 100,
