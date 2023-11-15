@@ -4,6 +4,18 @@ export default class Level1 extends Phaser.Scene {
   }
 
   create() {
+    /* ------------------------------- SOUNDS ------------------------ */
+
+    this.audio = this.sound.add("soundTrack", { loop: true });
+    this.laserPlayer = this.sound.add("laserPlayer");
+    this.explosionSound = this.sound.add("explosion");
+    this.laserEnemy = this.sound.add("laserEnemy");
+    this.audio.play();
+    this.audio.setVolume(0.2);
+    this.laserPlayer.setVolume(0.5);
+    this.explosionSound.setVolume(0.5);
+    this.laserEnemy.setVolume(0.5);
+
     // Configura el fondo con el ancho y alto predeterminados
     this.background = this.add.image(0, 0, "fondo").setOrigin(0, 0);
 
@@ -16,7 +28,7 @@ export default class Level1 extends Phaser.Scene {
     this.player = this.physics.add
       .sprite(this.cameras.main.centerX, this.cameras.main.centerY, "ship")
       .setScale(0.8);
-    this.player.body.collideWorldBounds = true;
+    this.player.body.collideWorldBounds = false;
 
     // Agrega el evento de clic del mouse para mover la nave
     this.background.on("pointerdown", this.handleBackgroundClickMove, this);
@@ -67,7 +79,7 @@ export default class Level1 extends Phaser.Scene {
         bounceX: 1,
         bounceY: 1,
         angularVelocity: 1,
-        collideWorldBounds: true,
+        collideWorldBounds: false, // Desactiva las colisiones con los límites del mundo para permitir que las rocas atraviesen
       });
 
       this.rockGroup.children.iterate(
@@ -89,6 +101,26 @@ export default class Level1 extends Phaser.Scene {
           }
           var speed = Math.floor(Math.random() * 200) + 10;
           child.body.setVelocity(vx * speed, vy * speed);
+
+          // Configura el evento cuando una roca salga del mundo
+          child.body.world.on(
+            "worldbounds",
+            function (body) {
+              if (body.gameObject === child) {
+                // Verifica en qué borde salió la roca y la hace aparecer en el lado opuesto
+                if (body.blocked.down) {
+                  child.y = 0;
+                } else if (body.blocked.up) {
+                  child.y = this.background.displayHeight;
+                } else if (body.blocked.left) {
+                  child.x = this.background.displayWidth;
+                } else if (body.blocked.right) {
+                  child.x = 0;
+                }
+              }
+            },
+            this
+          );
         }.bind(this)
       );
       this.setColliders();
@@ -135,6 +167,8 @@ export default class Level1 extends Phaser.Scene {
   rockHitPlayer(ship, rock) {
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
+    this.explosionSound.play()
+
     rock.destroy();
     this.makeRocks();
     this.downPlayer();
@@ -143,6 +177,8 @@ export default class Level1 extends Phaser.Scene {
   damagePlayer(player, bullet) {
     var explosion = this.add.sprite(this.player.x, this.player.y, "exp");
     explosion.play("boom");
+    this.explosionSound.play()
+
     bullet.destroy();
     this.downPlayer();
   }
@@ -151,6 +187,8 @@ export default class Level1 extends Phaser.Scene {
     bullet.destroy();
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
+    this.explosionSound.play()
+    
     rock.destroy();
     this.makeRocks();
   }
@@ -222,6 +260,7 @@ export default class Level1 extends Phaser.Scene {
     this.bulletGroup.add(bullet);
     bullet.angle = this.player.angle;
     bullet.body.setVelocity(dirObj.tx * 200, dirObj.ty * 200);
+    this.laserPlayer.play()
   }
 
   getDirFromAngle(angle) {
@@ -234,22 +273,9 @@ export default class Level1 extends Phaser.Scene {
     };
   }
 
-  update() {
-    this.checkRockPositions();
-    // Asegurar que las balas no se salgan del mundo
-    this.bulletGroup.children.iterate((bullet) => {
-      if (
-        bullet &&
-        (bullet.y < 0 || bullet.y > this.background.displayHeight)
-      ) {
-        bullet.destroy();
-      }
-    });
-  }
-
   checkRockPositions() {
+    // Verificar si las rocas han salido por los bordes y ajustar su posición
     this.rockGroup.children.iterate((rock) => {
-      // Verificar si una roca ha salido por los bordes y ajustar su posición
       if (rock.x < 0) {
         rock.x = this.background.displayWidth;
       } else if (rock.x > this.background.displayWidth) {
@@ -260,6 +286,36 @@ export default class Level1 extends Phaser.Scene {
         rock.y = this.background.displayHeight;
       } else if (rock.y > this.background.displayHeight) {
         rock.y = 0;
+      }
+    });
+  }
+
+  checkPlayerPosition() {
+    // Verificar si la nave ha salido por los bordes y ajustar su posición
+    if (this.player.x < 0) {
+      this.player.x = this.background.displayWidth;
+    } else if (this.player.x > this.background.displayWidth) {
+      this.player.x = 0;
+    }
+
+    if (this.player.y < 0) {
+      this.player.y = this.background.displayHeight;
+    } else if (this.player.y > this.background.displayHeight) {
+      this.player.y = 0;
+    }
+  }
+
+  update() {
+    this.checkRockPositions();
+    this.checkPlayerPosition();
+
+    // Asegurar que las balas no se salgan del mundo
+    this.bulletGroup.children.iterate((bullet) => {
+      if (
+        bullet &&
+        (bullet.y < 0 || bullet.y > this.background.displayHeight)
+      ) {
+        bullet.destroy();
       }
     });
   }
