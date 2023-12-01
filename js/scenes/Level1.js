@@ -30,6 +30,12 @@ export default class Level1 extends Phaser.Scene {
       .setScale(0.8);
     this.player.body.collideWorldBounds = false;
 
+    this.player.isMoving = true;
+    this.player.originalVelocity = {
+      x: this.player.body.velocity.x,
+      y: this.player.body.velocity.y,
+    };
+
     // Agrega el evento de clic del mouse para mover la nave
     this.background.on("pointerdown", this.handleBackgroundClickMove, this);
 
@@ -43,11 +49,55 @@ export default class Level1 extends Phaser.Scene {
       this.background.displayHeight
     );
 
+    this.musicButton = this.add
+      .image(16, 16, "btn_sound")
+      .setOrigin(0, 0)
+      .setScale(0.35)
+      .setInteractive();
+
+    this.musicButton.setScrollFactor(0); // Para que el botón no se desplace con la cámara
+
+    // Agregar evento de clic al botón de música
+    this.musicButton.on("pointerdown", this.toggleMusic, this);
+
+    this.pauseButton = this.add
+      .image(16, 16, "btn_pause")
+      .setOrigin(-10, 0)
+      .setScale(0.35)
+      .setInteractive();
+
+    this.pauseButton.setScrollFactor(0);
+
+    this.pauseButton.on("pointerdown", this.clickPause, this);
+
     // Ajusta la cámara para que comience centrada en la posición inicial de la nave del jugador
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
     this.bulletGroup = this.physics.add.group();
+    // Iterar sobre las balas y establecer la propiedad isMoving y almacenar la velocidad original
+    this.bulletGroup.children.iterate((bullet) => {
+      bullet.isMoving = true;
+      bullet.originalVelocity = {
+        x: bullet.body.velocity.x,
+        y: bullet.body.velocity.y,
+      };
+    });
+
     this.rockGroup = this.physics.add.group();
+
+    // Iterar sobre las rocas y establecer la propiedad isMoving y almacenar la velocidad original
+    this.rockGroup.children.iterate((rock) => {
+      rock.isMoving = true;
+      rock.originalVelocity = {
+        x: rock.body.velocity.x,
+        y: rock.body.velocity.y,
+      };
+    });
+
+    // Propiedades para almacenar si las balas y las rocas fueron destruidas antes de la pausa
+    this.isBulletDestroyed = false;
+    this.isRockDestroyed = false;
+
     this.makeRocks();
 
     var frameNames = this.anims.generateFrameNumbers("exp");
@@ -102,6 +152,9 @@ export default class Level1 extends Phaser.Scene {
           var speed = Math.floor(Math.random() * 200) + 10;
           child.body.setVelocity(vx * speed, vy * speed);
 
+          // Configura la propiedad originalVelocity
+          child.originalVelocity = { x: vx * speed, y: vy * speed };
+
           // Configura el evento cuando una roca salga del mundo
           child.body.world.on(
             "worldbounds",
@@ -124,6 +177,84 @@ export default class Level1 extends Phaser.Scene {
         }.bind(this)
       );
       this.setColliders();
+    }
+  }
+
+  toggleMusic() {
+    if (this.audio.isPlaying) {
+      this.audio.pause();
+      this.musicButton.setTexture("btn_notSound"); // Cambia la textura del botón a 'musicOff'
+    } else {
+      this.audio.resume();
+      this.musicButton.setTexture("btn_sound"); // Cambia la textura del botón a 'musicOn'
+    }
+  }
+
+  clickPause() {
+    this.is_pause = !this.is_pause;
+
+    if (this.is_pause) {
+      this.startPause();
+    } else {
+      this.endPause();
+    }
+  }
+
+  startPause() {
+    // Detener el movimiento de las balas, las rocas y la nave del jugador
+    this.bulletGroup.children.iterate((bullet) => {
+      bullet.isMoving = false;
+      bullet.body.velocity.setTo(0, 0);
+    });
+
+    this.rockGroup.children.iterate((rock) => {
+      rock.isMoving = false;
+      rock.body.velocity.setTo(0, 0);
+    });
+
+    this.player.isMoving = false;
+    this.player.body.velocity.setTo(0, 0);
+
+    // Almacenar si las balas, las rocas y la nave del jugador fueron destruidas antes de la pausa
+    this.isBulletDestroyed = this.bulletGroup.countActive() === 0;
+    this.isRockDestroyed = this.rockGroup.countActive() === 0;
+    this.isPlayerDestroyed = !this.player.active;
+  }
+
+  endPause() {
+    // Reanudar el movimiento de las balas, las rocas y la nave del jugador y restaurar si fueron destruidas antes de la pausa
+    this.bulletGroup.children.iterate((bullet) => {
+      if (bullet && bullet.body && !this.isBulletDestroyed) {
+        bullet.isMoving = true;
+        if (bullet.body.velocity) {
+          bullet.body.velocity.setTo(
+            bullet.originalVelocity.x,
+            bullet.originalVelocity.y
+          );
+        }
+      }
+    });
+
+    this.rockGroup.children.iterate((rock) => {
+      if (rock && rock.body && !this.isRockDestroyed) {
+        rock.isMoving = true;
+        if (rock.body.velocity) {
+          rock.body.velocity.setTo(
+            rock.originalVelocity.x,
+            rock.originalVelocity.y
+          );
+        }
+      }
+    });
+
+    if (this.player && this.player.body && !this.isPlayerDestroyed) {
+      this.player.isMoving = true;
+      if (this.player.body.velocity) {
+        this.player.body.velocity.setTo(
+          this.player.originalVelocity.x,
+          this.player.originalVelocity.y
+        );
+      }
     }
   }
 
@@ -167,7 +298,9 @@ export default class Level1 extends Phaser.Scene {
   rockHitPlayer(ship, rock) {
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
-    this.explosionSound.play()
+    if (this.audio.isPlaying) {
+      this.explosionSound.play();
+    }
 
     rock.destroy();
     this.makeRocks();
@@ -177,7 +310,9 @@ export default class Level1 extends Phaser.Scene {
   damagePlayer(player, bullet) {
     var explosion = this.add.sprite(this.player.x, this.player.y, "exp");
     explosion.play("boom");
-    this.explosionSound.play()
+    if (this.audio.isPlaying) {
+      this.explosionSound.play();
+    }
 
     bullet.destroy();
     this.downPlayer();
@@ -187,8 +322,10 @@ export default class Level1 extends Phaser.Scene {
     bullet.destroy();
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
-    this.explosionSound.play()
-    
+    if (this.audio.isPlaying) {
+    this.explosionSound.play();
+    }
+
     rock.destroy();
     this.makeRocks();
   }
@@ -207,28 +344,33 @@ export default class Level1 extends Phaser.Scene {
   }
 
   handleBackgroundClickMove(pointer) {
-    this.handleMovePlayer(pointer.x, pointer.y);
+    if (!this.is_pause) {
+      this.handleMovePlayer(pointer.x, pointer.y);
+    }
   }
-
   // Agrega este método para manejar la barra espaciadora
   handleSpacebar(event) {
     event.preventDefault(); // Evita el comportamiento predeterminado de la barra espaciadora (como hacer scroll)
-    // Verificar si el temporizador permite el disparo
-    const currentTime = this.getTimer();
-    const delay = 500; // Establecer el tiempo de retraso deseado en milisegundos
 
-    if (
-      this.canShoot &&
-      (!this.lastShotTime || currentTime - this.lastShotTime >= delay)
-    ) {
-      this.makeBullet();
-      this.canShoot = false; // Desactivar el disparo hasta que pase el retraso
-      this.lastShotTime = currentTime; // Actualizar el tiempo del último disparo
+    // Verifica si el juego está en pausa y evita disparar
+    if (!this.is_pause) {
+      // Verificar si el temporizador permite el disparo
+      const currentTime = this.getTimer();
+      const delay = 500; // Establecer el tiempo de retraso deseado en milisegundos
 
-      // Configurar un retraso antes de permitir el próximo disparo
-      this.time.delayedCall(delay, () => {
-        this.canShoot = true;
-      });
+      if (
+        this.canShoot &&
+        (!this.lastShotTime || currentTime - this.lastShotTime >= delay)
+      ) {
+        this.makeBullet();
+        this.canShoot = false; // Desactivar el disparo hasta que pase el retraso
+        this.lastShotTime = currentTime; // Actualizar el tiempo del último disparo
+
+        // Configurar un retraso antes de permitir el próximo disparo
+        this.time.delayedCall(delay, () => {
+          this.canShoot = true;
+        });
+      }
     }
   }
 
@@ -259,8 +401,16 @@ export default class Level1 extends Phaser.Scene {
     );
     this.bulletGroup.add(bullet);
     bullet.angle = this.player.angle;
-    bullet.body.setVelocity(dirObj.tx * 200, dirObj.ty * 200);
-    this.laserPlayer.play()
+    // Configura la propiedad originalVelocity
+    bullet.originalVelocity = { x: dirObj.tx * 200, y: dirObj.ty * 200 };
+
+    bullet.body.setVelocity(
+      bullet.originalVelocity.x,
+      bullet.originalVelocity.y
+    );
+    if (this.audio.isPlaying) {
+      this.laserPlayer.play();
+    }
   }
 
   getDirFromAngle(angle) {

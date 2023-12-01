@@ -23,6 +23,12 @@ export default class Preload extends Phaser.Scene {
     this.load.image("eship", "../../images/eship.png");
     this.load.image("ebullet", "../../images/ebullet.png");
     this.load.image("game-over", "../../images/game-over.png");
+    this.load.image("btn_start", "../../images/btn_Start2.png");
+    this.load.image("btn_sound", "../../images/btn_sound2.png");
+    this.load.image("btn_notSound", "../../images/btn_notSound2.png");
+    this.load.image("btn_pause", "../../images/btn_pause2.png");
+    this.load.image("btn_play", "../../images/btn_play2.png");
+    this.load.image("btn_help", "../../images/btn_help2.png");
 
     this.load.audio("laserPlayer", "../../audio/laser.ogg");
     this.load.audio("laserEnemy", "../../audio/enemyShoot.wav");
@@ -32,6 +38,6 @@ export default class Preload extends Phaser.Scene {
 
   create() {
     // init scene juego
-    this.scene.start("Level1");
+    this.scene.start("Menu");
   }
 }
