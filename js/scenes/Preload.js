@@ -9,7 +9,11 @@ export default class Preload extends Phaser.Scene {
   preload() {
     // load assets
     this.load.image("ship", "../../images/player.png");
-    this.load.image("fondoGalaxia", "../../images/background.jpg");
+    this.load.image("ship1", "../../images/nave.PNG");
+    this.load.image("ship2", "../../images/nave2.png");
+    this.load.image("ship3", "../../images/nave3.png");
+    this.load.image("ship4", "../../images/nave4.png");
+    this.load.image("ship5", "../../images/nave5-removebg-preview.png");
     this.load.image("fondo", "../../images/fondo2.jpg");
     this.load.spritesheet("rocks", "../../images/rocks.png", {
       frameWidth: 125,
@@ -18,6 +22,10 @@ export default class Preload extends Phaser.Scene {
     this.load.spritesheet("exp", "../../images/exp.png", {
       frameWidth: 64,
       frameHeight: 64,
+    });
+    this.load.spritesheet("effect", "../../images/sprite.png", {
+      frameWidth: 100,
+      frameHeight: 100,
     });
     this.load.image("bullet", "../../images/bullet.png");
     this.load.image("eship", "../../images/eship.png");
@@ -38,6 +46,6 @@ export default class Preload extends Phaser.Scene {
 
   create() {
     // init scene juego
-    this.scene.start("Menu");
+    this.scene.start("Level1");
   }
 }

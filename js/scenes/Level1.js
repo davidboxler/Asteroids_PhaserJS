@@ -26,7 +26,7 @@ export default class Level1 extends Phaser.Scene {
 
     // Asegúrate de que la nave del jugador aparezca en el centro de la pantalla
     this.player = this.physics.add
-      .sprite(this.cameras.main.centerX, this.cameras.main.centerY, "ship")
+      .sprite(this.cameras.main.centerX, this.cameras.main.centerY, "ship1")
       .setScale(0.8);
     this.player.body.collideWorldBounds = false;
 
@@ -58,16 +58,20 @@ export default class Level1 extends Phaser.Scene {
     this.musicButton.setScrollFactor(0); // Para que el botón no se desplace con la cámara
 
     // Agregar evento de clic al botón de música
+    this.musicButton.on("pointerover", this.handleButtonOver, this);
+    this.musicButton.on("pointerout", this.handleButtonOut, this);
     this.musicButton.on("pointerdown", this.toggleMusic, this);
 
     this.pauseButton = this.add
       .image(16, 16, "btn_pause")
-      .setOrigin(-10, 0)
+      .setOrigin(-13, 0)
       .setScale(0.35)
       .setInteractive();
 
     this.pauseButton.setScrollFactor(0);
 
+    this.pauseButton.on("pointerover", this.handleButtonOver, this);
+    this.pauseButton.on("pointerout", this.handleButtonOut, this);
     this.pauseButton.on("pointerdown", this.clickPause, this);
 
     // Ajusta la cámara para que comience centrada en la posición inicial de la nave del jugador
@@ -98,7 +102,7 @@ export default class Level1 extends Phaser.Scene {
     this.isBulletDestroyed = false;
     this.isRockDestroyed = false;
 
-    this.makeRocks();
+    // this.makeRocks();
 
     var frameNames = this.anims.generateFrameNumbers("exp");
     var f2 = frameNames.slice();
@@ -110,6 +114,18 @@ export default class Level1 extends Phaser.Scene {
       frameRate: 48,
       repeat: false,
     });
+
+    var frameNames2 = this.anims.generateFrameNumbers("effect");
+    var f22 = frameNames2.slice();
+    f22.reverse();
+    var f33 = f22.concat(frameNames2);
+    this.anims.create({
+      key: "space",
+      frames: f33,
+      frameRate: 48,
+      repeat: false,
+    });
+
     this.shootTimer = this.time.addEvent({
       delay: 300,
       callback: this.allowShooting,
@@ -180,6 +196,14 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  handleButtonOver(pointer, localX, localY, event) {
+    document.body.style.cursor = "pointer";
+  }
+
+  handleButtonOut(pointer, event) {
+    document.body.style.cursor = "default";
+  }
+
   toggleMusic() {
     if (this.audio.isPlaying) {
       this.audio.pause();
@@ -194,8 +218,10 @@ export default class Level1 extends Phaser.Scene {
     this.is_pause = !this.is_pause;
 
     if (this.is_pause) {
+      this.pauseButton.setTexture("btn_play");
       this.startPause();
     } else {
+      this.pauseButton.setTexture("btn_pause");
       this.endPause();
     }
   }
@@ -323,7 +349,7 @@ export default class Level1 extends Phaser.Scene {
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
     if (this.audio.isPlaying) {
-    this.explosionSound.play();
+      this.explosionSound.play();
     }
 
     rock.destroy();
@@ -346,7 +372,29 @@ export default class Level1 extends Phaser.Scene {
   handleBackgroundClickMove(pointer) {
     if (!this.is_pause) {
       this.handleMovePlayer(pointer.x, pointer.y);
+      this.addClickEffect(pointer.x, pointer.y);
     }
+  }
+
+  addClickEffect(x, y) {
+    // Puedes cambiar "click_effect" por el nombre de tu textura de efecto
+    const clickEffect = this.add.sprite(x, y, "effect");
+    clickEffect.play("space");
+    // Configura la animación o ajusta la escala, alfa, etc., según tus necesidades
+    clickEffect.setScale(0.8);
+    clickEffect.setAlpha(1);
+
+    // Agrega una animación, si es necesario
+    this.tweens.add({
+      targets: clickEffect,
+      alpha: 0,
+      duration: 1000, // Duración de la animación en milisegundos
+      ease: "Power2",
+      onComplete: () => {
+        // Elimina el sprite después de que termine la animación
+        clickEffect.destroy();
+      },
+    });
   }
   // Agrega este método para manejar la barra espaciadora
   handleSpacebar(event) {

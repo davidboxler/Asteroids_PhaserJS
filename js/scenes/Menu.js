@@ -13,6 +13,6 @@ export default class Menu extends Phaser.Scene {
       .setScale(0.55)
       .refreshBody()
       .setInteractive()
-      .on("pointerdown", () => this.scene.start("Level1"));
+      .on("pointerdown", () => this.scene.start("Help"));
   }
 }
