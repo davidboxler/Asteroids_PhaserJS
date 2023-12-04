@@ -1,11 +1,11 @@
 export default class Level1 extends Phaser.Scene {
   constructor() {
+    /* ---------- CONSTRUCTOR DE LA SCENA ----------- */
     super({ key: "Level1" });
   }
 
   create() {
-    /* ------------------------------- SOUNDS ------------------------ */
-
+    /* ---------- CARGA DE SONIDOS ----------- */
     this.audio = this.sound.add("soundTrack", { loop: true });
     this.laserPlayer = this.sound.add("laserPlayer");
     this.explosionSound = this.sound.add("explosion");
@@ -16,18 +16,19 @@ export default class Level1 extends Phaser.Scene {
     this.explosionSound.setVolume(0.5);
     this.laserEnemy.setVolume(0.5);
 
+    /* ---------- CONFIGURACION DEL FONDO ----------- */
     // Configura el fondo con el ancho y alto predeterminados
     this.background = this.add.image(0, 0, "fondo").setOrigin(0, 0);
-
     this.background.setInteractive();
 
+    /* ---------- CONFIGURACION DE LA NAVE DEL JUGADOR ----------- */
     this.playerShields = 100;
     this.playerWon = true;
-
-    // Asegúrate de que la nave del jugador aparezca en el centro de la pantalla
+    // Establecer que la nave del jugador aparezca en el centro de la pantalla
     this.player = this.physics.add
       .sprite(this.cameras.main.centerX, this.cameras.main.centerY, "ship1")
       .setScale(0.8);
+
     this.player.body.collideWorldBounds = false;
 
     this.player.isMoving = true;
@@ -49,19 +50,24 @@ export default class Level1 extends Phaser.Scene {
       this.background.displayHeight
     );
 
+    /* ---------- CONFIGURACION DEL BOTON MUSICA Y SONIDO ----------- */
     this.musicButton = this.add
       .image(16, 16, "btn_sound")
       .setOrigin(0, 0)
       .setScale(0.35)
       .setInteractive();
 
-    this.musicButton.setScrollFactor(0); // Para que el botón no se desplace con la cámara
+    // Para que el botón no se desplace con la cámara
+    this.musicButton.setScrollFactor(0);
 
-    // Agregar evento de clic al botón de música
+    // Agregar evento al boton para que aparezca el efecto del cursor clic
     this.musicButton.on("pointerover", this.handleButtonOver, this);
+    // Agregar evento al boton para que desaparezca el efecto del cursor clic
     this.musicButton.on("pointerout", this.handleButtonOut, this);
+    // Agregar evento de clic al botón de música
     this.musicButton.on("pointerdown", this.toggleMusic, this);
 
+    /* ---------- CONFIGURACION DEL BOTON PAUSA ----------- */
     this.pauseButton = this.add
       .image(16, 16, "btn_pause")
       .setOrigin(-13, 0)
@@ -70,14 +76,20 @@ export default class Level1 extends Phaser.Scene {
 
     this.pauseButton.setScrollFactor(0);
 
+    // Agregar evento al boton para que aparezca el efecto del cursor clic
     this.pauseButton.on("pointerover", this.handleButtonOver, this);
+    // Agregar evento al boton para que desaparezca el efecto del cursor clic
     this.pauseButton.on("pointerout", this.handleButtonOut, this);
+    // Agregar evento de clic al botón de pausa
     this.pauseButton.on("pointerdown", this.clickPause, this);
 
     // Ajusta la cámara para que comience centrada en la posición inicial de la nave del jugador
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
+    /* ---------- CONFIGURACION DE LOS DISPAROS ----------- */
+    // Agregar el grupo de los disparos
     this.bulletGroup = this.physics.add.group();
+
     // Iterar sobre las balas y establecer la propiedad isMoving y almacenar la velocidad original
     this.bulletGroup.children.iterate((bullet) => {
       bullet.isMoving = true;
@@ -87,6 +99,8 @@ export default class Level1 extends Phaser.Scene {
       };
     });
 
+    /* ---------- CONFIGURACION DE LOS ASTEROIDES ----------- */
+    // Agregar el grupo de los asteroides
     this.rockGroup = this.physics.add.group();
 
     // Iterar sobre las rocas y establecer la propiedad isMoving y almacenar la velocidad original
@@ -102,40 +116,50 @@ export default class Level1 extends Phaser.Scene {
     this.isBulletDestroyed = false;
     this.isRockDestroyed = false;
 
-    // this.makeRocks();
+    /* ---------- LLAMADA A LA FUNCION PARA CREAR LOS ASTEROIDES ----------- */
+    this.makeRocks();
 
-    var frameNames = this.anims.generateFrameNumbers("exp");
-    var f2 = frameNames.slice();
-    f2.reverse();
-    var f3 = f2.concat(frameNames);
+    /* ---------- CONFIGURACION DE LAS ANIMACIONES ----------- */
+    // Agregar animacion de explosion
+    var animationExplosion = this.anims.generateFrameNumbers("exp");
+    var antExplo = animationExplosion.slice();
+    antExplo.reverse();
+    var anExp = antExplo.concat(animationExplosion);
     this.anims.create({
       key: "boom",
-      frames: f3,
+      frames: anExp,
       frameRate: 48,
       repeat: false,
     });
 
-    var frameNames2 = this.anims.generateFrameNumbers("effect");
-    var f22 = frameNames2.slice();
-    f22.reverse();
-    var f33 = f22.concat(frameNames2);
+    // Agregar animacion de efecto al hacer clic para dirigir la nave
+    var animationSpace = this.anims.generateFrameNumbers("effect");
+    var antSpace = animationSpace.slice();
+    antSpace.reverse();
+    var anSpac = antSpace.concat(animationSpace);
     this.anims.create({
       key: "space",
-      frames: f33,
+      frames: anSpac,
       frameRate: 48,
       repeat: false,
     });
 
+    // Agregar evento para retrasar el tiempo entre disparo y disparo
     this.shootTimer = this.time.addEvent({
       delay: 300,
       callback: this.allowShooting,
       callbackScope: this,
       loop: true,
     });
+
+    /* ---------- CONFIGURACION DE LA INFORMACION DEL JUEGO ----------- */
     this.makeInfo();
+
+    /* ---------- CONFIGURACION DE LAS COLICIONES ----------- */
     this.setColliders();
   }
 
+  /* ---------- FUNCION PARA CREAR LOS ATEROIDES ----------- */
   makeRocks() {
     if (this.rockGroup.getChildren().length == 0) {
       this.rockGroup = this.physics.add.group({
@@ -196,14 +220,17 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- FUNCION PARA HACER EL EFECTO CLIC POINTER ----------- */
   handleButtonOver(pointer, localX, localY, event) {
     document.body.style.cursor = "pointer";
   }
 
+  /* ---------- FUNCION PARA QUITAR EL EFECTO CLIC POINTER ----------- */
   handleButtonOut(pointer, event) {
     document.body.style.cursor = "default";
   }
 
+  /* ---------- FUNCION PARA ACTIVAR O DESACTIVAR EL SONIDO ----------- */
   toggleMusic() {
     if (this.audio.isPlaying) {
       this.audio.pause();
@@ -214,6 +241,7 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- FUNCION PARA ACTIVAR O DESACTIVAR LA PAUSA ----------- */
   clickPause() {
     this.is_pause = !this.is_pause;
 
@@ -226,6 +254,7 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- FUNCION PARA DETENER TODOS LOS OBJETOS DEL JUEGO ----------- */
   startPause() {
     // Detener el movimiento de las balas, las rocas y la nave del jugador
     this.bulletGroup.children.iterate((bullet) => {
@@ -247,6 +276,7 @@ export default class Level1 extends Phaser.Scene {
     this.isPlayerDestroyed = !this.player.active;
   }
 
+  /* ---------- FUNCION PARA REACTIVAR TODOS LOS OBJETOS DEL JUEGO ----------- */
   endPause() {
     // Reanudar el movimiento de las balas, las rocas y la nave del jugador y restaurar si fueron destruidas antes de la pausa
     this.bulletGroup.children.iterate((bullet) => {
@@ -284,6 +314,7 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- FUNCION DE COLICIONES DEL JUEGO ----------- */
   setColliders() {
     this.physics.add.collider(this.rockGroup);
     this.physics.add.collider(
@@ -302,6 +333,7 @@ export default class Level1 extends Phaser.Scene {
     );
   }
 
+  /* ---------- FUNCION PARA MOSTRAR LA INFORMACION DEL JUEGO ----------- */
   makeInfo() {
     this.text1 = this.add.text(0, 0, "Shields\n100", {
       fontSize: game.config.width / 30,
@@ -312,6 +344,7 @@ export default class Level1 extends Phaser.Scene {
     this.text1.setOrigin(20, 20);
   }
 
+  /* ---------- FUNCION GAME OVER ----------- */
   downPlayer() {
     this.playerShields--;
     this.text1.setText("Shields\n" + this.playerShields);
@@ -321,6 +354,7 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- FUNCION PARA DESTRUIR LOS ASTERIODES ----------- */
   rockHitPlayer(ship, rock) {
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
@@ -344,6 +378,7 @@ export default class Level1 extends Phaser.Scene {
     this.downPlayer();
   }
 
+  /* ---------- FUNCION PARA DESTRUIR LOS ASTERIODES ----------- */
   destoryRock(bullet, rock) {
     bullet.destroy();
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
@@ -356,6 +391,7 @@ export default class Level1 extends Phaser.Scene {
     this.makeRocks();
   }
 
+  /* ---------- FUNCION PARA RETRESAR LOS DISPAROS ----------- */
   getTimer() {
     var d = new Date();
     return d.getTime();
@@ -368,7 +404,8 @@ export default class Level1 extends Phaser.Scene {
   allowShooting() {
     this.canShoot = true;
   }
-
+  
+  /* ---------- FUNCION PARA CONFIGURAR EL MOVIENTO DE LA NAVE CON EL CLIC ----------- */
   handleBackgroundClickMove(pointer) {
     if (!this.is_pause) {
       this.handleMovePlayer(pointer.x, pointer.y);
@@ -376,8 +413,8 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- FUNCION PARA CONFIGURAR EL EFECTO DEL CLIC EN EL ESPACIO ----------- */
   addClickEffect(x, y) {
-    // Puedes cambiar "click_effect" por el nombre de tu textura de efecto
     const clickEffect = this.add.sprite(x, y, "effect");
     clickEffect.play("space");
     // Configura la animación o ajusta la escala, alfa, etc., según tus necesidades
@@ -396,7 +433,7 @@ export default class Level1 extends Phaser.Scene {
       },
     });
   }
-  // Agrega este método para manejar la barra espaciadora
+  /* ---------- FUNCION PARA CONFIGURAR EL DISPARO CON LA BARRA ESPACIADORA ----------- */
   handleSpacebar(event) {
     event.preventDefault(); // Evita el comportamiento predeterminado de la barra espaciadora (como hacer scroll)
 
@@ -439,6 +476,7 @@ export default class Level1 extends Phaser.Scene {
     sprite.angle = Phaser.Math.RadToDeg(angle);
   }
 
+  /* ---------- FUNCION PARA CONFIGURAR LOS DISPAROS ----------- */
   makeBullet() {
     var dirObj = this.getDirFromAngle(this.player.angle);
     console.log(dirObj);
@@ -461,6 +499,7 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- FUNCION PARA CONFIGURAR EL ANGULO DE LOS DISPAROS ----------- */
   getDirFromAngle(angle) {
     var rads = (angle * Math.PI) / 180;
     var tx = Math.cos(rads);
@@ -471,6 +510,7 @@ export default class Level1 extends Phaser.Scene {
     };
   }
 
+  /* ---------- FUNCION PARA CONFIGURAR LOS LIMITES DEL JUEGO (ASTEROIDES) ----------- */
   checkRockPositions() {
     // Verificar si las rocas han salido por los bordes y ajustar su posición
     this.rockGroup.children.iterate((rock) => {
@@ -488,6 +528,7 @@ export default class Level1 extends Phaser.Scene {
     });
   }
 
+  /* ---------- FUNCION PARA CONFIGURAR LOS LIMITES DEL JUEGO (NAVES) ----------- */
   checkPlayerPosition() {
     // Verificar si la nave ha salido por los bordes y ajustar su posición
     if (this.player.x < 0) {
@@ -503,6 +544,7 @@ export default class Level1 extends Phaser.Scene {
     }
   }
 
+  /* ---------- CONFIGURACION DEL UPDATE DEL JUEGO ----------- */
   update() {
     this.checkRockPositions();
     this.checkPlayerPosition();
