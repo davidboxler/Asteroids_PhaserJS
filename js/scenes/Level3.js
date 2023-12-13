@@ -1,7 +1,7 @@
-export default class Level1 extends Phaser.Scene {
+export default class Level3 extends Phaser.Scene {
   constructor() {
     /* ---------- CONSTRUCTOR DE LA SCENA ----------- */
-    super({ key: "Level1" });
+    super({ key: "Level3" });
   }
 
   /* ---------- INICIAR VARIBLES GLOBALES ----------- */
@@ -652,8 +652,19 @@ export default class Level1 extends Phaser.Scene {
     }
 
     if (this.timeLeft === 0 && this.playerLifes > 0) {
-      this.scene.start("Level2");
+      this.scene.start("Winner");
       this.timeLeft = 40;
     }
   }
 }
+
+// damagePlayer(player, bullet) {
+  //   var explosion = this.add.sprite(this.player.x, this.player.y, "exp");
+  //   explosion.play("boom");
+  //   if (this.audio.isPlaying) {
+  //     this.explosionSound.play();
+  //   }
+
+  //   bullet.destroy();
+  //   this.downPlayer();
+  // }

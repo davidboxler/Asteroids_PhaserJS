@@ -1,7 +1,7 @@
-export default class Level1 extends Phaser.Scene {
+export default class Level2 extends Phaser.Scene {
   constructor() {
     /* ---------- CONSTRUCTOR DE LA SCENA ----------- */
-    super({ key: "Level1" });
+    super({ key: "Level2" });
   }
 
   /* ---------- INICIAR VARIBLES GLOBALES ----------- */
@@ -652,7 +652,7 @@ export default class Level1 extends Phaser.Scene {
     }
 
     if (this.timeLeft === 0 && this.playerLifes > 0) {
-      this.scene.start("Level2");
+      this.scene.start("Level3");
       this.timeLeft = 40;
     }
   }

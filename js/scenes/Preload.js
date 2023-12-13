@@ -56,10 +56,11 @@ export default class Preload extends Phaser.Scene {
     /* ---------- IMAGENES FINALES VIDEOJUEGO ----------- */
     this.load.image("game-over", "../../images/game-over.png");
     this.load.image("win", "../../images/winner.png");
+    this.load.image("title", "../../images/titulo.png")
   }
 
   create() {
     // SCENA DE INICIO VIDEOJUEGO
-    this.scene.start("Winner");
+    this.scene.start("Menu");
   }
 }

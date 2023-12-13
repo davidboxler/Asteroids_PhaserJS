@@ -1,6 +1,8 @@
 import GameOver from './scenes/GameOver.js';
 import Help from './scenes/Help.js';
 import Level1 from './scenes/Level1.js';
+import Level2 from './scenes/Level2.js';
+import Level3 from './scenes/Level3.js';
 import Menu from './scenes/Menu.js';
 import Preload from './scenes/Preload.js';
 import Winner from './scenes/Winner.js';
@@ -24,7 +26,7 @@ const config = {
   // Lista de escenas para cargar
   // Solo la primera escena se mostrará
   // Recuerda importar la escena antes de agregarla a la lista
-  scene: [Preload, Level1, Winner, GameOver, Menu, Help],
+  scene: [Preload, Level1, Level2, Level3, Winner, GameOver, Menu, Help],
 };
 
 // Crea una nueva instancia de juego de Phaser
