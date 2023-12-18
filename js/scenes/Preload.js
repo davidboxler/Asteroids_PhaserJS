@@ -17,7 +17,6 @@ export default class Preload extends Phaser.Scene {
 
     /* ---------- IMAGENES DISPAROS ----------- */
     this.load.image("bullet", "../../images/bullet.png");
-    this.load.image("ebullet", "../../images/ebullet.png");
 
     /* ---------- IMAGENES BOTONES VIDEOJUEGO ----------- */
     this.load.image("btn_start", "../../images/btn_Start2.png");
@@ -27,6 +26,7 @@ export default class Preload extends Phaser.Scene {
     this.load.image("btn_pause", "../../images/btn_pause2.png");
     this.load.image("btn_play", "../../images/btn_play2.png");
     this.load.image("btn_help", "../../images/btn_help2.png");
+    this.load.image("btn_salir", "../../images/btn_Salir.png");
 
     /* ---------- IMAGENES INSTRUCCIONES ----------- */
     this.load.image("box_shoter", "../../images/disparo_ast.png");
@@ -57,10 +57,14 @@ export default class Preload extends Phaser.Scene {
     this.load.image("game-over", "../../images/game-over.png");
     this.load.image("win", "../../images/winner.png");
     this.load.image("title", "../../images/titulo.png")
+
+    /* --------------- CINEMATICAS ------------------- */
+    this.load.video("cinematicaInicial", "../../images/cinematica.mp4")
+    this.load.video("creditos", "../../images/creditos.mp4")
   }
 
   create() {
     // SCENA DE INICIO VIDEOJUEGO
-    this.scene.start("Menu");
+    this.scene.start("Level1");
   }
 }

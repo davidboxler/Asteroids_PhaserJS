@@ -5,11 +5,14 @@ export default class Level3 extends Phaser.Scene {
   }
 
   /* ---------- INICIAR VARIBLES GLOBALES ----------- */
-  init() {
+  init(data) {
+    this.scoreTotal = data.scoreTotal;
+    this.scorePlayer = data.scorePlayer;
+    this.playerLifes = data.playerLifes;
     this.rockCreationEvent;
-    this.initialTime = 40;
+    this.initialTime = 20;
     this.timeLeft = this.initialTime;
-    this.playerLifes = 3;
+    this.lives = [];
     this.gameOver = false;
   }
 
@@ -192,58 +195,68 @@ export default class Level3 extends Phaser.Scene {
       callbackScope: this,
       loop: true,
     });
+
+    /* ---------- CONFIGURACION DEL PUNTAJE ----------- */
+    // Creamos el texto visible del puntaje
+    this.scoreText = this.add.text(400, 920, "Puntos: " + this.scoreTotal, {
+      fontSize: "28px",
+      fill: "white",
+      fontStyle: "bold",
+      backgroundColor: "black",
+    });
   }
 
   /* ---------- FUNCION PARA CREAR LOS ATEROIDES ----------- */
   makeRocks() {
-    if (this.rockGroup.getChildren().length == 0) {
+    if (this.rockGroup.getChildren().length === 0) {
       // Crear un grupo de físicas para las rocas
       this.rockGroup = this.physics.add.group({
-        key: "rocks", // Clave del sprite para las rocas
-        frame: [0, 1, 2], // Índices de frames a usar del sprite para las rocas
-        frameQuantity: 6, // Cantidad de rocas en el grupo (crea 6 rocas)
-        bounceX: 1, // Coeficiente de rebote en el eje X (sin rebote)
-        bounceY: 1, // Coeficiente de rebote en el eje Y (sin rebote)
-        angularVelocity: 1, // Velocidad angular inicial de las rocas
-        collideWorldBounds: false, // No permitir que las rocas colisionen con los límites del mundo
+        key: "rocks",
+        frame: [0, 1, 2],
+        frameQuantity: 6,
+        bounceX: 1,
+        bounceY: 1,
+        angularVelocity: 1,
+        collideWorldBounds: false,
       });
 
-      // Iterar sobre cada roca en el grupo recién creado
       this.rockGroup.children.iterate(
         function (child) {
-          // Generar posiciones aleatorias para las rocas dentro del área del juego
-          var xx = Math.floor(Math.random() * this.background.displayWidth);
-          var yy = Math.floor(Math.random() * this.background.displayHeight);
+          // Definir la distancia desde la nave principal (ajusta el valor según tus necesidades)
+          var distanceFromPlayer = 300;
+
+          // Calcular un ángulo aleatorio para la posición en torno a la nave
+          var angle = Math.random() * Math.PI * 2;
+
+          // Calcular las coordenadas a una distancia específica de la nave
+          var xx = this.player.x + distanceFromPlayer * Math.cos(angle);
+          var yy = this.player.y + distanceFromPlayer * Math.sin(angle);
+
           child.x = xx;
           child.y = yy;
 
-          // Cambiar el tamaño de las rocas de forma aleatoria entre 0.5 y 1.5
-          var scaleFactor = Math.random() * (1 - 0.5) + 0.5;
+          // Cambia el tamaño de las rocas
+          var scaleFactor = Math.random() * (1 - 0.5) + 0.5; // Tamaño aleatorio entre 0.5 y 1.5
           child.setScale(scaleFactor);
 
-          // Generar velocidades aleatorias para las rocas
           var vx = Math.floor(Math.random() * 2) - 1;
           var vy = Math.floor(Math.random() * 2) - 1;
-
-          // Asegurarse de que las velocidades no sean ambas cero
           if (vx == 0 && vy == 0) {
             vx = 1;
             vy = 1;
           }
-
-          // Asignar una velocidad aleatoria a cada roca
-          var speed = Math.floor(Math.random() * 200) + 10;
+          var speed = Math.floor(Math.random() * 150) + 10;
           child.body.setVelocity(vx * speed, vy * speed);
 
-          // Configurar la propiedad originalVelocity para recordar la velocidad original de la roca
+          // Configura la propiedad originalVelocity
           child.originalVelocity = { x: vx * speed, y: vy * speed };
 
-          // Configurar el evento cuando una roca sale del mundo
+          // Configurar el evento cuando una roca salga del mundo
           child.body.world.on(
             "worldbounds",
             function (body) {
               if (body.gameObject === child) {
-                // Verificar en qué borde salió la roca y hacerla aparecer en el lado opuesto
+                // Verificar en qué borde salió la roca y la hace aparecer en el lado opuesto
                 if (body.blocked.down) {
                   child.y = 0;
                 } else if (body.blocked.up) {
@@ -259,8 +272,6 @@ export default class Level3 extends Phaser.Scene {
           );
         }.bind(this)
       );
-
-      // Establecer colisiones entre las rocas y otros elementos del juego
       this.setColliders();
     }
   }
@@ -411,9 +422,7 @@ export default class Level3 extends Phaser.Scene {
 
   /* ---------- FUNCION PARA MOSTRAR LA INFORMACION DEL JUEGO ----------- */
   makeInfo() {
-    this.lives = []; // Array con la cantidad de vidas
-
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < this.playerLifes; i++) {
       // Se recorre el array y se muestran mini naves en la pantalla simulando la cant de vidas
       const life = this.add
         .sprite(0, 0, "ship1")
@@ -441,55 +450,48 @@ export default class Level3 extends Phaser.Scene {
 
   /* ---------- FUNCION PARA DESTRUIR LOS ASTEROIDES AL IMPACTAR CON EL JUGADOR ----------- */
   rockHitPlayer(ship, rock) {
-    // Crear una explosión en la posición de la roca impactada
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
-
-    // Reproducir el sonido de explosión si la música está en reproducción
     if (this.audio.isPlaying) {
       this.explosionSound.play();
     }
 
-    // Destruir la roca impactada y generar nuevas rocas
     rock.destroy();
     this.makeRocks();
-
-    // Reducir la cantidad de vidas del jugador
     this.downPlayer();
   }
 
-  /* ---------- FUNCION PARA DESTRUIR LOS ASTEROIDES AL IMPACTAR CON UN DISPARO ----------- */
-  destroyRock(bullet, rock) {
-    // Destruir la bala y la roca impactada
+  /* ---------- FUNCION PARA DESTRUIR LOS ASTERIODES ----------- */
+  destoryRock(bullet, rock) {
     bullet.destroy();
     var explosion = this.add.sprite(rock.x, rock.y, "exp");
     explosion.play("boom");
-
-    // Reproducir el sonido de explosión si la música está en reproducción
     if (this.audio.isPlaying) {
       this.explosionSound.play();
     }
 
-    // Destruir la roca impactada y generar nuevas rocas
     rock.destroy();
     this.makeRocks();
+
+    // Suma un puntaje aleatorio entre 90 y 110 cuando el jugador destruye un asteroide
+    this.scorePlayer += 100;
+    this.scoreTotal += 100;
+
+    // Actualizar el texto del puntaje en pantalla
+    this.scoreText.setText("Puntaje: " + this.scoreTotal);
   }
 
-  /* ---------- FUNCION PARA OBTENER EL TIEMPO ACTUAL ----------- */
+  /* ---------- FUNCION PARA RETRESAR LOS DISPAROS ----------- */
   getTimer() {
     var d = new Date();
     return d.getTime();
   }
 
-  /* ---------- FUNCION PARA REGISTRAR EL MOMENTO EN QUE SE PRESIONA UN BOTÓN ----------- */
   onDown() {
-    // Registrar el tiempo actual cuando se presiona un botón
     this.downTimer = this.getTimer();
   }
 
-  /* ---------- FUNCION PARA PERMITIR EL DISPARO ----------- */
   allowShooting() {
-    // Habilitar la capacidad de disparar
     this.canShoot = true;
   }
 
@@ -548,7 +550,7 @@ export default class Level3 extends Phaser.Scene {
   }
 
   handleMovePlayer(targetX, targetY) {
-    this.physics.moveTo(this.player, targetX, targetY, 100);
+    this.physics.moveTo(this.player, targetX, targetY, 130);
     this.rotateSpriteTowards(this.player, targetX, targetY);
     this.tx = targetX;
     this.ty = targetY;
@@ -575,7 +577,7 @@ export default class Level3 extends Phaser.Scene {
     this.bulletGroup.add(bullet);
     bullet.angle = this.player.angle;
     // Configura la propiedad originalVelocity
-    bullet.originalVelocity = { x: dirObj.tx * 200, y: dirObj.ty * 200 };
+    bullet.originalVelocity = { x: dirObj.tx * 250, y: dirObj.ty * 250 };
 
     bullet.body.setVelocity(
       bullet.originalVelocity.x,
@@ -631,6 +633,17 @@ export default class Level3 extends Phaser.Scene {
     }
   }
 
+  // Función para actualizar la visualización de las vidas en la pantalla
+  updateLivesDisplay() {
+    // Agrega una nueva nave en la pantalla simulando la vida adicional
+    const newLife = this.add
+      .sprite(0, 0, "ship1")
+      .setOrigin(1.4, -2.5 - this.lives.length * 1.3);
+    newLife.setScale(0.4);
+    newLife.rotation = Phaser.Math.DegToRad(270);
+    this.lives.push(newLife);
+  }
+
   /* ---------- CONFIGURACION DEL UPDATE DEL JUEGO ----------- */
   update() {
     this.checkRockPositions();
@@ -647,24 +660,26 @@ export default class Level3 extends Phaser.Scene {
     });
 
     if (this.gameOver) {
-      this.scene.start("GameOver");
-      this.timeLeft = 40;
+      this.audio.stop();
+      this.scene.start("GameOver", {
+        scoreTotal: this.scoreTotal
+      });
+      this.timeLeft = 20;
     }
 
     if (this.timeLeft === 0 && this.playerLifes > 0) {
-      this.scene.start("Winner");
-      this.timeLeft = 40;
+      this.audio.stop();
+      this.scene.start("Winner", {
+        scoreTotal: this.scoreTotal
+      });
+      this.timeLeft = 20;
+    }
+
+    // Verificar si el jugador ha alcanzado ciertos múltiplos de puntos
+    if (this.scorePlayer >= 1000) {
+      this.scorePlayer = 0; // Reiniciar el puntaje para evitar que esta condición se cumpla repetidamente
+      this.playerLifes += 1; // Incrementar las vidas
+      this.updateLivesDisplay(); // Actualizar la visualización de las vidas
     }
   }
 }
-
-// damagePlayer(player, bullet) {
-  //   var explosion = this.add.sprite(this.player.x, this.player.y, "exp");
-  //   explosion.play("boom");
-  //   if (this.audio.isPlaying) {
-  //     this.explosionSound.play();
-  //   }
-
-  //   bullet.destroy();
-  //   this.downPlayer();
-  // }

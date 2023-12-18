@@ -3,9 +3,6 @@ export default class Winner extends Phaser.Scene {
     super({ key: "Winner" });
   }
 
-  /*winnerSound;
-    this.winnerSound = this.sound.add('won');
-        this.winnerSound.play();*/
   create() {
     // Fondo
     this.background = this.add.image(0, 0, "fondo").setOrigin(0, 0);
@@ -24,6 +21,6 @@ export default class Winner extends Phaser.Scene {
     this.add
       .image(340, 500, "win")
       .setInteractive()
-      .on("pointerdown", () => this.scene.start("Menu"));
+      .on("pointerdown", () => this.scene.start("Creditos"));
   }
 }

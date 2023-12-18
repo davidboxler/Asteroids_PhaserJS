@@ -26,7 +26,7 @@ export default class Help extends Phaser.Scene {
       .setScale(0.55)
       .refreshBody()
       .setInteractive()
-      .on("pointerdown", () => this.scene.start("Level1"));
+      .on("pointerdown", () => this.scene.start("Cinematica"));
 
     /* ------------------- INSTRUCCIONES ----------------- */
 
