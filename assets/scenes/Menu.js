@@ -1,5 +1,4 @@
 export default class Menu extends Phaser.Scene {
-  audio;
   constructor() {
     super("Menu");
   }

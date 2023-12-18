@@ -1,13 +1,13 @@
-import Cinematica from './scenes/Cinematica.js';
-import Creditos from './scenes/Creditos.js';
-import GameOver from './scenes/GameOver.js';
-import Help from './scenes/Help.js';
-import Level1 from './scenes/Level1.js';
-import Level2 from './scenes/Level2.js';
-import Level3 from './scenes/Level3.js';
-import Menu from './scenes/Menu.js';
-import Preload from './scenes/Preload.js';
-import Winner from './scenes/Winner.js';
+import Cinematica from '../assets/scenes/Cinematica.js';
+import Creditos from '../assets/scenes/Creditos.js';
+import GameOver from '../assets/scenes/GameOver.js';
+import Help from '../assets/scenes/Help.js';
+import Level1 from '../assets/scenes/Level1.js';
+import Level2 from '../assets/scenes/Level2.js';
+import Level3 from '../assets/scenes/Level3.js';
+import Menu from "../assets/scenes/Menu.js";
+import Preload from '../assets/scenes/Preload.js';
+import Winner from '../assets/scenes/Winner.js';
 
 // Crea un nuevo objeto de configuración de Phaser
 const config = {
