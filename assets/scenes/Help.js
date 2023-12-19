@@ -20,13 +20,13 @@ export default class Help extends Phaser.Scene {
     overlay.setAlpha(0.5);
 
     // Botón siguente para comenzar el nivel 1
-    let btnJugar = this.physics.add.staticGroup();
-    btnJugar
-      .create(330, 800, "btn_next")
+    let btnVolver = this.physics.add.staticGroup();
+    btnVolver
+      .create(330, 800, "btn_back")
       .setScale(0.55)
       .refreshBody()
       .setInteractive()
-      .on("pointerdown", () => this.scene.start("Cinematica"));
+      .on("pointerdown", () => this.scene.start("Menu"));
 
     /* ------------------- INSTRUCCIONES ----------------- */
 

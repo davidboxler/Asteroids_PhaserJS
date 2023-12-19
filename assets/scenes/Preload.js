@@ -23,8 +23,10 @@ export default class Preload extends Phaser.Scene {
     this.load.image("btn_notSound", "./assets/images/btn_notSound2.png");
     this.load.image("btn_pause", "./assets/images/btn_pause2.png");
     this.load.image("btn_play", "./assets/images/btn_play2.png");
-    this.load.image("btn_help", "./assets/images/btn_help2.png");
     this.load.image("btn_salir", "./assets/images/btn_Salir.png");
+    this.load.image("btn_back", "./assets/images/btn_back.png")
+    this.load.image("btn_help", "./assets/images/btn_help.png")
+    this.load.image("btn_restart", "./assets/images/btn_restart.png")
 
     /* ---------- IMAGENES INSTRUCCIONES ----------- */
     this.load.image("box_shoter", "./assets/images/disparo_ast.png");

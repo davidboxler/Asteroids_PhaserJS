@@ -13,7 +13,7 @@ export default class Menu extends Phaser.Scene {
       .image(340, 650, "btn_start")
       .setScale(0.55)
       .setInteractive()
-      .on("pointerdown", () => this.scene.start("Help"));
+      .on("pointerdown", () => this.scene.start("Cinematica"));
 
     // Para que el botón no se desplace con la cámara
     this.btnJugar.setScrollFactor(0);
@@ -22,6 +22,20 @@ export default class Menu extends Phaser.Scene {
     this.btnJugar.on("pointerover", this.handleButtonOver, this);
     // Agregar evento al boton para que desaparezca el efecto del cursor clic
     this.btnJugar.on("pointerout", this.handleButtonOut, this);
+
+    this.btnBack = this.add
+      .image(340, 750, "btn_help")
+      .setScale(0.55)
+      .setInteractive()
+      .on("pointerdown", () => this.scene.start("Help"));
+
+    // Para que el botón no se desplace con la cámara
+    this.btnBack.setScrollFactor(0);
+
+    // Agregar evento al boton para que aparezca el efecto del cursor clic
+    this.btnBack.on("pointerover", this.handleButtonOver, this);
+    // Agregar evento al boton para que desaparezca el efecto del cursor clic
+    this.btnBack.on("pointerout", this.handleButtonOut, this);
 
     this.btnSalir = this.add
       .image(550, 900, "btn_salir")

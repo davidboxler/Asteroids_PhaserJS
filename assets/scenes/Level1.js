@@ -7,7 +7,7 @@ export default class Level1 extends Phaser.Scene {
   /* ---------- INICIAR VARIBLES GLOBALES ----------- */
   init() {
     this.rockCreationEvent;
-    this.initialTime = 10;
+    this.initialTime = 15;
     this.timeLeft = this.initialTime;
     this.initialScore = 0;
     this.scorePlayer = this.initialScore;
@@ -163,14 +163,6 @@ export default class Level1 extends Phaser.Scene {
     this.shootTimer = this.time.addEvent({
       delay: 300,
       callback: this.allowShooting,
-      callbackScope: this,
-      loop: true,
-    });
-
-    // Agregar evento para generar más rocas cada cierto tiempo
-    this.rockCreationEvent = this.time.addEvent({
-      delay: 2000, // 2000 milisegundos = 2 segundos
-      callback: this.makeRocks,
       callbackScope: this,
       loop: true,
     });
@@ -663,6 +655,7 @@ export default class Level1 extends Phaser.Scene {
     if (this.gameOver) {
       this.scene.start("GameOver", {
         scoreTotal: this.scoreTotal,
+        sceneName: this.scene.key
       });
       this.timeLeft = 10;
     }
